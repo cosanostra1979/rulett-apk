@@ -1,16 +1,35 @@
-[app]
-title = Rulett APK
-package.name = rulettapk
-package.domain = org.rulett
-source.include_exts = py,png,jpg,kv,atlas
-source.dir = .
-version = 0.1
-requirements = python3,kivy
-orientation = portrait
-osx.python_version = 3
-fullscreen = 0
-android.permissions = INTERNET
+name: Build Android APK
 
-[buildozer]
-log_level = 2
-warn_on_root = 1
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential git python3-dev ccache libncurses5:i386 libstdc++6:i386 libgtk2.0-0:i386 libpangox-1.0-0:i386 libpangoxft-1.0-0:i386 libidn11:i386 python3-pip openjdk-17-jdk unzip wget
+        pip install --upgrade pip
+        pip install cython==0.29.33 buildozer
+
+    - name: Build with Buildozer
+      run: |
+        yes | buildozer -v android debug
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: package
+        path: bin/*.apk
